@@ -1,0 +1,178 @@
+id: send-money-bank-v1
+name: "Send Money – V1 (Bank Only)"
+version: V1
+domain: "customer_transactions_domain.drawio"
+description: >
+  Microservices architecture for Send Money V1 (Bank Only).
+  Customer-Transaction record created with status NEW.
+  Each transaction consists of at least 2 (PULL & PUSH) and at most 3 (PULL, INTER_BANK & PUSH) segments.
+  PULL segment submitted asynchronously to transaction engine (/transaction-processor) with CT status IN_PROGRESS.
+  Segment lifecycle on TP_TRANSACTION: NEW -> INSTRUCTED | REJECTED -> INSTRUCTION_ACCEPTED | INSTRUCTION_ACCEPTED -> SETTLED.
+  Upon PULL INSTRUCTION_ACCEPTED, CT status updates to FUNDS_SECURED and next segment is submitted.
+  Upon PUSH INSTRUCTION_ACCEPTED, CT status updates to COMPLETED and push notification is dispatched.
+  Every Customer-Transaction status change publishes a Kafka event to CT_TRANSACTION topic.
+entryPoint: "/customer-transactions/send-money"
+validationStatus: "confirmed"
+
+services:
+  - mobile-app
+  - customer-transaction-service
+  - ipay-core-service
+  - route-optimizer-service
+  - transaction-processor-service
+  - payment-gateway-service
+  - ipay-account-service
+  - notify-service
+
+kafkaTopics:
+  - CT_TRANSACTION
+  - TP_TRANSACTION
+  - NOTIFY
+
+statuses:
+  ct_statuses:
+    - NEW
+    - IN_PROGRESS
+    - FUNDS_SECURED
+    - COMPLETED
+    - DECLINED
+  segment_statuses:
+    - NEW
+    - INSTRUCTED
+    - INSTRUCTION_ACCEPTED
+    - REJECTED
+    - SETTLED
+
+segments:
+  pull:
+    type: PULL
+    mandatory: true
+    description: "Pulls funds from customer bank account via Payment Gateway (BANK)"
+  inter_bank:
+    type: INTER_BANK
+    mandatory: false
+    description: "Optional intermediary clearing transfer between banks"
+  push:
+    type: PUSH
+    mandatory: true
+    description: "Pushes funds to destination beneficiary account"
+
+steps:
+  - id: step-1
+    order: 1
+    title: "Mobile Calling /send-money"
+    description: "Mobile calls the /send-money endpoint in the customer-transaction service. Record created with status = NEW."
+    serviceId: customer-transaction-service
+    type: api-call
+    isAsync: false
+    details:
+      caller: "Mobile App"
+      endpoint: "POST /customer-transactions/send-money"
+      dbAction: "INSERT customer_transaction (status = NEW)"
+
+  - id: step-2
+    order: 2
+    title: "Obtain ct_transaction_reference"
+    description: "Calls the ipay-core Service to evaluate user limits and obtain ct_transaction_reference."
+    serviceId: ipay-core-service
+    type: api-call
+    isAsync: false
+    details:
+      target: "ipay-core Service"
+      endpoint: "POST /ipay-core/transaction-reference"
+
+  - id: step-3
+    order: 3
+    title: "Contact Route Optimizer"
+    description: "Calls the route-optimizer Service to resolve the optimal bank payment rail."
+    serviceId: route-optimizer-service
+    type: api-call
+    isAsync: false
+    details:
+      target: "route-optimizer Service"
+      endpoint: "POST /route-optimizer/resolve-route"
+
+  - id: step-4
+    order: 4
+    title: "Submit Segment to Transaction Engine Asynchronously"
+    description: "Calls /transaction-processor to process the payment segment asynchronously with the transaction engine."
+    serviceId: transaction-processor-service
+    type: api-call
+    isAsync: true
+    details:
+      target: "transaction-processor Service"
+      endpoint: "POST /transaction-processor/pull-segment"
+
+  - id: step-5
+    order: 5
+    title: "Process with Bank Payment Gateway"
+    description: "Transaction processor calls the Bank Payment Gateway (ISO 8583 / ISO 20022) to execute bank clearing."
+    serviceId: payment-gateway-service
+    type: api-call
+    isAsync: true
+    details:
+      target: "Bank Payment Gateway"
+      protocol: "ISO 8583 / ISO 20022"
+
+  - id: step-6
+    order: 6
+    title: "Publish Segment Updates to TP_TRANSACTION"
+    description: "Transaction processor publishes segment clearing status updates (INSTRUCTION_ACCEPTED) to the TP_TRANSACTION Kafka topic."
+    serviceId: transaction-processor-service
+    type: kafka-event
+    isAsync: true
+    details:
+      topic: "TP_TRANSACTION"
+      status: "INSTRUCTION_ACCEPTED"
+
+  - id: step-7
+    order: 7
+    title: "Listen to Transaction Updates via TP_TRANSACTION Consumer"
+    description: "Customer Transaction Service listens to TP_TRANSACTION Kafka consumer. When segment reaches INSTRUCTION_ACCEPTED, updates CT status to FUNDS_SECURED and publishes to CT_TRANSACTION."
+    serviceId: customer-transaction-service
+    type: kafka-event
+    isAsync: true
+    details:
+      topic: "TP_TRANSACTION"
+      segmentStatus: "INSTRUCTION_ACCEPTED"
+      resultingCTStatus: "FUNDS_SECURED"
+      kafkaPublish: "CT_TRANSACTION"
+
+  - id: step-8
+    order: 8
+    title: "Update ipay Account Wallet"
+    description: "Calls the ipay-account Service to update wallet balance and double-entry ledger records."
+    serviceId: ipay-account-service
+    type: api-call
+    isAsync: false
+    details:
+      target: "ipay-account Service"
+      action: "Debit customer wallet balance"
+
+  - id: step-9
+    order: 9
+    title: "Publish Push Request to NOTIFY Topic"
+    description: "Customer Transaction Service publishes notification request to the NOTIFY Kafka topic."
+    serviceId: customer-transaction-service
+    type: status-update
+    isAsync: true
+    details:
+      topic: "NOTIFY"
+      event: "AppPushNotificationRequest"
+
+  - id: step-10
+    order: 10
+    title: "Consume NOTIFY & Deliver Push via Firebase FCM to Mobile"
+    description: "notify-service consumes NOTIFY topic -> calls Firebase Cloud Messaging (FCM) API -> Firebase FCM pushes final notification banner to Mobile App. CT updated to COMPLETED."
+    serviceId: notify-service
+    type: notification
+    isAsync: true
+    details:
+      consumer: "notify-service"
+      pushGateway: "Firebase Cloud Messaging (FCM)"
+      client: "Mobile App"
+      resultingCTStatus: "COMPLETED"
+    details:
+      status: "COMPLETED"
+      topic: "CT_TRANSACTION & NOTIFY"
+      consumer: "notify-service → FCM / APNS push"

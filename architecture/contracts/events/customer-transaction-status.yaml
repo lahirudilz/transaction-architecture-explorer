@@ -1,0 +1,44 @@
+topic: customer-transaction-status-updates
+version: 1.0.0
+description: Broadcast event stream for customer transaction status updates
+validationStatus: needs-validation
+
+producer:
+  service: Customer Transaction Manager
+  role: Primary Publisher
+
+consumers:
+  - service: Notification Service
+    purpose: Deliver push notification to customer app
+  - service: Journal / Ledger Service
+    purpose: Post double-entry records and transfer fees on SETTLED
+
+schema:
+  type: record
+  name: CustomerTransactionStatusEvent
+  namespace: com.fintech.transactions.events
+  fields:
+    - name: eventId
+      type: string
+    - name: transactionId
+      type: string
+    - name: sourceAccountId
+      type: string
+    - name: amount
+      type: double
+    - name: currency
+      type: string
+    - name: previousStatus
+      type: string
+    - name: currentStatus
+      type: string
+      symbols:
+        - NEW
+        - INSTRUCTED
+        - REJECTED
+        - INSTRUCTION_ACCEPTED
+        - INSTRUCTION_REJECTED
+        - SETTLED
+        - INSTRUCTION_TIMEOUT
+    - name: timestamp
+      type: long

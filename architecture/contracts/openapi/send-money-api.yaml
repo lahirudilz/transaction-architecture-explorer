@@ -1,0 +1,93 @@
+openapi: 3.0.3
+info:
+  title: Customer Transaction Service API
+  version: 1.0.0
+  description: API specifications for Send Money V1 (Bank Only)
+
+paths:
+  /customer-transactions/send-money:
+    post:
+      summary: Initiate Bank Send Money
+      operationId: initiateSendMoney
+      tags:
+        - Customer Transaction
+      parameters:
+        - name: X-Correlation-ID
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMoneyRequest'
+      responses:
+        '200':
+          description: Transaction successfully initialized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendMoneyResponse'
+        '400':
+          description: Invalid request payload structure
+        '422':
+          description: Business validation failure (e.g. limit exceeded, account locked)
+        '500':
+          description: Internal server error or gateway timeout
+
+components:
+  schemas:
+    SendMoneyRequest:
+      type: object
+      required:
+        - sourceAccountId
+        - targetBankCode
+        - targetAccountNumber
+        - amount
+        - currency
+      properties:
+        sourceAccountId:
+          type: string
+          example: "acc_893201"
+        targetBankCode:
+          type: string
+          example: "CHASUS33"
+        targetAccountNumber:
+          type: string
+          example: "0029381029"
+        amount:
+          type: number
+          format: double
+          minimum: 0.01
+          example: 150.00
+        currency:
+          type: string
+          example: "USD"
+        reference:
+          type: string
+          example: "Dinner payment"
+
+    SendMoneyResponse:
+      type: object
+      required:
+        - transactionId
+        - status
+        - createdAt
+      properties:
+        transactionId:
+          type: string
+          example: "tx_8849201"
+        status:
+          type: string
+          enum: [NEW, INSTRUCTED, REJECTED]
+          example: "NEW"
+        createdAt:
+          type: string
+          format: date-time

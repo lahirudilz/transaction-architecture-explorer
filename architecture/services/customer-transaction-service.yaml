@@ -1,0 +1,43 @@
+id: customer-transaction-service
+name: Customer Transaction Service
+domain: Customer Transaction
+description: >
+  Edge orchestration service receiving customer payment requests, performing
+  token verification, and coordinating lifecycle events with Customer Transaction Manager.
+businessResponsibility: >
+  Customer payment initiation, idempotency token verification, and gateway request routing.
+nodeType: microservice
+validationStatus: needs-validation
+
+apisExposed:
+  - id: api-send-money
+    method: POST
+    endpoint: /customer-transactions/send-money
+    description: Initiates a send money transaction from a customer bank account.
+    callingService: "Mobile Client / API Gateway"
+    receivingService: customer-transaction-service
+    httpResponseCodes:
+      - "200"
+      - "400"
+      - "401"
+      - "422"
+      - "500"
+    timeoutMs: 5000
+    retryConfig: "Non-retryable without Idempotency-Key header"
+    correlationId: "X-Correlation-ID (Propagated)"
+    validationStatus: needs-validation
+
+kafkaTopicsProduced:
+  - customer-transaction-status-updates
+
+kafkaTopicsConsumed: []
+
+databaseInteractions:
+  - "customer_transaction_record (Create, Read, Update)"
+
+upstreamDependencies:
+  - API Gateway / Mobile Client
+
+downstreamDependencies:
+  - Customer Transaction Manager
+  - Instruction Service

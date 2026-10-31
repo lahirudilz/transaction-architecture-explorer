@@ -1,0 +1,277 @@
+/* ─── React Flow Custom Nodes Design System ────────────────────────────── */
+
+.arch-node {
+  width: 340px;
+  background: #ffffff;
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  font-family: var(--font-family);
+  position: relative;
+  transition: all 0.2s ease;
+  overflow: visible;
+  box-sizing: border-box;
+}
+
+.arch-node:hover {
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+  transform: translateY(-2px);
+}
+
+.arch-node.selected {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25), 0 12px 28px rgba(37, 99, 235, 0.18) !important;
+}
+
+/* Category Header */
+.arch-node-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.arch-node-type-label {
+  font-weight: 700;
+}
+
+.arch-node-group-label {
+  opacity: 0.85;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Body */
+.arch-node-body {
+  padding: 12px 14px;
+  background: #ffffff;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+.arch-node-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.arch-node-icon-box {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.arch-node-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.arch-node-desc-text {
+  font-size: 11px;
+  color: #475569;
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+
+/* Metadata Badges */
+.arch-node-tags-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.arch-node-badge-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  font-size: 10px;
+  color: #334155;
+  background: #f8fafc;
+  padding: 3px 6px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  line-height: 1.35;
+}
+
+.badge-key {
+  font-weight: 700;
+  color: #64748b;
+  flex-shrink: 0;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 9.5px;
+}
+
+.badge-value {
+  color: #1e293b;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 9.5px;
+  word-break: break-all;
+}
+
+/* ─── Node Variant Themes ─── */
+
+/* 1. Generic Microservice */
+.arch-node.microservice {
+  border-color: #0284c7;
+}
+.arch-node.microservice .arch-node-topbar {
+  background: #0284c7;
+  color: #ffffff;
+}
+.arch-node.microservice .arch-node-icon-box {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+/* 2. Core Orchestrator (Customer Txn Service) */
+.arch-node.microservice-core {
+  border-color: #1d4ed8 !important;
+  border-width: 2.5px !important;
+  box-shadow: 0 6px 20px rgba(29, 78, 216, 0.16) !important;
+}
+.arch-node.microservice-core .arch-node-topbar {
+  background: #1e40af !important;
+  color: #ffffff !important;
+}
+.arch-node.microservice-core .arch-node-icon-box {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
+/* 3. Transaction Engine / Processor */
+.arch-node.microservice-engine {
+  border-color: #7c3aed !important;
+}
+.arch-node.microservice-engine .arch-node-topbar {
+  background: #6d28d9 !important;
+  color: #ffffff !important;
+}
+.arch-node.microservice-engine .arch-node-icon-box {
+  background: #ede9fe !important;
+  color: #6d28d9 !important;
+}
+
+/* 4. Kafka Topic */
+.arch-node.kafka-topic {
+  border-color: #f59e0b;
+  border-style: dashed;
+  border-width: 2px;
+  background: #fffdf5;
+}
+.arch-node.kafka-topic .arch-node-topbar {
+  background: #d97706;
+  color: #ffffff;
+}
+.arch-node.kafka-topic .arch-node-icon-box {
+  background: #fef3c7;
+  color: #b45309;
+}
+.arch-node.kafka-topic .arch-node-body {
+  background: #fffdf5;
+}
+
+/* 5. Database */
+.arch-node.database {
+  border-color: #9333ea;
+}
+.arch-node.database .arch-node-topbar {
+  background: #7e22ce;
+  color: #ffffff;
+}
+.arch-node.database .arch-node-icon-box {
+  background: #fae8ff;
+  color: #7e22ce;
+}
+
+/* 6. External Integration (Bank Gateway) */
+.arch-node.external-integration {
+  border-color: #ea580c;
+}
+.arch-node.external-integration .arch-node-topbar {
+  background: #c2410c;
+  color: #ffffff;
+}
+.arch-node.external-integration .arch-node-icon-box {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+/* 7. Notification Service */
+.arch-node.notification-service {
+  border-color: #059669;
+}
+.arch-node.notification-service .arch-node-topbar {
+  background: #047857;
+  color: #ffffff;
+}
+.arch-node.notification-service .arch-node-icon-box {
+  background: #d1fae5;
+  color: #047857;
+}
+
+/* 8. Client App */
+.arch-node.api-endpoint {
+  border-color: #3b82f6;
+}
+.arch-node.api-endpoint .arch-node-topbar {
+  background: #2563eb;
+  color: #ffffff;
+}
+.arch-node.api-endpoint .arch-node-icon-box {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* ─── React Flow Handles ─── */
+.react-flow__handle {
+  width: 10px !important;
+  height: 10px !important;
+  background: #475569 !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 50% !important;
+  z-index: 10;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.react-flow__handle:hover {
+  background: #2563eb !important;
+  transform: scale(1.3);
+}
+
+.react-flow__handle-left {
+  left: -5px !important;
+}
+
+.react-flow__handle-right {
+  right: -5px !important;
+}
+
+.react-flow__handle-top {
+  top: -5px !important;
+}
+
+.react-flow__handle-bottom {
+  bottom: -5px !important;
+}
